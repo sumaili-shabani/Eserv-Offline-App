@@ -107,17 +107,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 //lets go to sign up
 
                 Image.asset(
-                  "assets/images/dgrpi.jpg",
+                  "assets/images/logodgrphu.png",
                   width: 210,
                 ),
                 const SizedBox(height: 15),
                 InputField(
-                    hint: "Username",
+                    hint: "Nom utilisateur",
                     icon: Icons.account_circle,
                     controller: usrName,
                     validatorInput: true),
                 InputField(
-                    hint: "Password",
+                    hint: "Mot de passe",
                     icon: Icons.lock,
                     controller: password,
                     passwordInvisible: true,

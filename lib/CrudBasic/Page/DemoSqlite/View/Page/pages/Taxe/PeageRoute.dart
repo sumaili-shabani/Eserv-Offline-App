@@ -136,6 +136,8 @@ class _PeageRouteState extends State<PeageRoute> {
     return Scaffold(
         backgroundColor: Colors.white,
         floatingActionButton: FloatingActionButton(
+          backgroundColor: ConfigurationApp.successColor,
+          foregroundColor: ConfigurationApp.whiteColor,
           onPressed: () {
             Navigator.push(context,
                     MaterialPageRoute(builder: (context) => AddPeage()))

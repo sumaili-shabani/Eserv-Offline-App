@@ -142,7 +142,6 @@ class _MenuHomePageState extends State<MenuHomePage> {
               logOut(context);
             },
             icon: const Icon(Icons.logout),
-            color: ConfigurationApp.blackColor,
           ),
           const Padding(
             padding: EdgeInsets.only(right: 15),
