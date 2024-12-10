@@ -3,7 +3,7 @@ import 'package:charts_flutter/flutter.dart' as charts;
 class BarChartModel {
   final String year;
   final String? typeCb;
-  final int financial;
+  final double financial;
   final charts.Color? color;
 
   BarChartModel({

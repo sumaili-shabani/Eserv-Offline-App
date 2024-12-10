@@ -2,21 +2,21 @@ import 'dart:io';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/PdfGenereteModule/dgrpi_info.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/PdfGenereteModule/invoice.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/PdfGenereteModule/utils.dart';
-import 'package:demoapp/CrudBasic/Page/DemoSqlite/jsonModel/Taxation_model.dart';
+import 'package:demoapp/CrudBasic/Page/DemoSqlite/jsonModel/PeageModel.dart';
 
 import 'package:htmltopdfwidgets/htmltopdfwidgets.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart';
 
-class PdfGeneratorRecu {
+class PdfGeneratorRecuPeageRoute {
   Future<File> generateReceiptPdfRecu({
     required String receiptNumber,
     required String date,
     required String customerName,
     required double amount,
     required Invoice invoice,
-    required TaxationModel infoTaxation,
+    required PeageModel infoTaxation,
     required String connected,
     required String passager,
   }) async {
@@ -29,7 +29,8 @@ class PdfGeneratorRecu {
         buildHeaderTaxation(invoice, infoTaxation, connected, passager),
         SizedBox(height: 0.2 * PdfPageFormat.cm),
         buildTitleTaxation(infoTaxation, passager),
-        buildInvoice(invoice),
+        // buildInvoice(invoice),
+        buildInvoiceRecu(infoTaxation),
         Divider(),
         buildTotal(invoice),
       ],
@@ -53,7 +54,7 @@ class PdfGeneratorRecu {
 
   //header
   static Widget buildHeaderTaxation(
-      Invoice invoice, TaxationModel note, String agent, String passager) {
+      Invoice invoice, PeageModel note, String agent, String passager) {
     final netTotal = invoice.items
         .map((item) => item.unitPrice * item.quantity)
         .reduce((item1, item2) => item1 + item2);
@@ -75,7 +76,7 @@ class PdfGeneratorRecu {
               child: BarcodeWidget(
                 barcode: Barcode.qrCode(),
                 data:
-                    'Réf de la note : ${note.codeNote.toString()} - ${note.nomCompletCb.toString()} ${invoice.items[0].description.toString()} : $netTotal  Usd',
+                    'Réf de la note : ${note.codeNote.toString()} - ${note.nomCb.toString()} ${invoice.items[0].description.toString()} : $netTotal  Usd',
                 height: 110,
                 width: 110,
               ),
@@ -121,8 +122,7 @@ class PdfGeneratorRecu {
         ],
       );
 
-  static Widget buildTitleTaxation(TaxationModel note, String passager) =>
-      Column(
+  static Widget buildTitleTaxation(PeageModel note, String passager) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(
@@ -136,24 +136,24 @@ class PdfGeneratorRecu {
       );
 
   static Widget buildCustomerAddressTaxation(
-          TaxationModel note, String passager) =>
+          PeageModel note, String passager) =>
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Contribuable:',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
           Text(
-              note.nomCompletCb.toString() != ''
-                  ? note.nomCompletCb.toString()
-                  : note.nomEts.toString(),
+              note.nomCb.toString() != ''
+                  ? note.nomCb.toString()
+                  : note.nomCb.toString(),
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
           SizedBox(height: 0.1 * PdfPageFormat.cm),
-          Text('Passager: $passager',
-              style: TextStyle(fontSize: 7, fontWeight: FontWeight.bold)),
+          Text('N° de tél: $passager',
+              style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
         ],
       );
 
-  static Widget buildInvoiceInfoTaxation(TaxationModel note, String agent) {
+  static Widget buildInvoiceInfoTaxation(PeageModel note, String agent) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -164,13 +164,13 @@ class PdfGeneratorRecu {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('N° Réf: ${note.codeNote}',
+                      Text('${note.codeNote}',
                           maxLines: 4,
                           style: TextStyle(
-                              fontSize: 10, fontWeight: FontWeight.bold)),
+                              fontSize: 9, fontWeight: FontWeight.bold)),
                       SizedBox(height: 1 * PdfPageFormat.mm),
                       Text(
-                          'Date: ${DateFormat("d/M/y").format(DateTime.parse(note.dateTaxation.toString()))}',
+                          'Date: ${DateFormat("d/M/y").format(DateTime.parse(note.datePaiement.toString()))}',
                           maxLines: 4,
                           style: TextStyle(
                               fontSize: 10, fontWeight: FontWeight.bold)),
@@ -190,6 +190,31 @@ class PdfGeneratorRecu {
   *=======================
   *
   */
+
+  // detail jour
+  static Widget buildInvoiceRecu(PeageModel note) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('''- ${note.nomCatTaxe.toString()}''',
+            maxLines: 4,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+        SizedBox(height: 2),
+        Text(
+            '''- Montant: ${note.qte.toString()} * ${note.pu.toString()} = ${note.montantUsd.toString()} Usd''',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+        SizedBox(height: 2),
+        Text(
+            '''- Marque du véhucule: ${note.marqueVehicule.toString()} / ${note.modelVehicule.toString()}  ''',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+        SizedBox(height: 2),
+        Text(
+            '''- N° chassie et plaque du véhucule: ${note.chassieVehicule.toString()} / ${note.numPlaque.toString()} ''',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
 
   //header
   static Widget buildHeader(Invoice invoice) => Column(
@@ -295,7 +320,7 @@ class PdfGeneratorRecu {
         item.description,
         item.quantity,
         item.unitPrice,
-        total.toStringAsFixed(1),
+        total.toStringAsFixed(2),
       ];
     }).toList();
 

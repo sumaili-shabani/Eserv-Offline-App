@@ -1204,8 +1204,8 @@ class _ContribuablePageState extends State<ContribuablePage> {
         description: infoTaxe.nomCatTaxe.toString(),
         date: DateTime.now(),
         quantity: int.parse(infoTaxe.qte.toString()),
-        vat: double.parse(infoTaxe.pu.toString()),
-        unitPrice: double.parse(infoTaxe.montantReel.toString()),
+        vat: double.parse(infoTaxe.montantReel.toString()),
+        unitPrice: double.parse(infoTaxe.pu.toString()),
       ));
       Passager = infoTaxe.passager.toString();
     }

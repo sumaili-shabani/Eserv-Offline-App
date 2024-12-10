@@ -73,6 +73,27 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  registerCount() async {
+    try {
+      var res = await db.createUser(Users(
+        fullName: "Roger Sumaili",
+        email: "superadmin@e-serv.org",
+        usrName: "superAdmin",
+        password: "9Patrona@1234",
+        id: 60,
+        idRole: 12,
+      ));
+      if (res > 0) {
+        if (!mounted) return;
+        CallApi.showMsg("Création de compte avec succès!!!");
+        // Navigator.push(context,
+        //     MaterialPageRoute(builder: (context) => const LoginScreen()));
+      }
+    } catch (e) {
+      CallApi.showErrorMsg(e.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,6 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     TextButton(
                         onPressed: () {
+                          registerCount();
                           // Navigator.push(
                           //     context,
                           //     MaterialPageRoute(

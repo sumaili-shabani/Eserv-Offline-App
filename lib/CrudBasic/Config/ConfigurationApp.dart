@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class ConfigurationApp {
@@ -11,4 +13,8 @@ class ConfigurationApp {
   static const blackColor = Colors.black;
   static const dangerColor = Colors.red;
   static const warningColor = Colors.orange;
+
+  static randomColor() {
+    return Color(Random().nextInt(0xffffffff));
+  }
 }

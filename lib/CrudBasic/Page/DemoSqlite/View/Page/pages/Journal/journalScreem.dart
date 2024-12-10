@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:demoapp/CrudBasic/Api/my_api.dart';
 import 'package:demoapp/CrudBasic/Config/ConfigurationApp.dart';
@@ -10,6 +11,7 @@ import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/pages/Components/Lay
 import 'package:flutter/material.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:intl/intl.dart';
 
 class JournalScreem extends StatefulWidget {
   const JournalScreem({super.key});
@@ -174,9 +176,16 @@ class _JournalScreemState extends State<JournalScreem> {
 
     await syncToMysqlCb().whenComplete(() {
       handler.saveToMysqlTaxation(taxationList).whenComplete(() {
-        // Navigator.of(context).pop(true);
-
+        userList();
+        //appel de taxation
+        fetchDataList();
+        //appel statistique
         getDashbord();
+        getListDataChart();
+        isInteret();
+
+        //autre pour les statistiques
+        getMesVentes();
         setState(() {
           loading = false;
         });
@@ -210,6 +219,39 @@ class _JournalScreemState extends State<JournalScreem> {
     });
   }
 
+  /*
+  *
+  *==============================
+  * Fetch list statistique
+  *==============================
+  *
+  */
+  List venteList = [];
+  Future getMesVentes() async {
+    List infoStat = await handler.getListStatistiqueTaxation("dateTaxation");
+    setState(() {
+      venteList = infoStat;
+    });
+    // print(venteList);
+  }
+
+  List colors = [
+    ConfigurationApp.dangerColor,
+    Colors.green,
+    Colors.yellow,
+    ConfigurationApp.successColor,
+    ConfigurationApp.warningColor,
+    ConfigurationApp.primaryColor,
+    ConfigurationApp.blackColor
+  ];
+  Random random = Random();
+
+  int indexColor = 0;
+
+  void changeIndexColor() {
+    setState(() => indexColor = random.nextInt(7));
+  }
+
   @override
   void initState() {
     handler = DatabaseHelper();
@@ -224,6 +266,9 @@ class _JournalScreemState extends State<JournalScreem> {
     getDashbord();
     getListDataChart();
     isInteret();
+
+    //autre pour les statistiques
+    getMesVentes();
 
     EasyLoading.addStatusCallback((status) {
       print('EasyLoading Status $status');
@@ -240,7 +285,7 @@ class _JournalScreemState extends State<JournalScreem> {
         id: "financial",
         data: dataStat,
         domainFn: (BarChartModel series, _) => series.year,
-        measureFn: (BarChartModel series, _) => series.financial,
+        measureFn: (BarChartModel series, _) => series.financial ?? 0,
         colorFn: (BarChartModel series, _) =>
             series.color ?? charts.ColorUtil.fromDartColor(Colors.blue),
       ),
@@ -250,7 +295,7 @@ class _JournalScreemState extends State<JournalScreem> {
         id: "financial",
         data: dataStat,
         domainFn: (BarChartModel series, _) => series.typeCb ?? series.year,
-        measureFn: (BarChartModel series, _) => series.financial,
+        measureFn: (BarChartModel series, _) => series.financial ?? 0,
         colorFn: (BarChartModel series, _) =>
             series.color ??
             charts.ColorUtil.fromDartColor(ConfigurationApp.successColor),
@@ -265,6 +310,45 @@ class _JournalScreemState extends State<JournalScreem> {
                       title: 'Synchronisation',
                       subTitle:
                           "Effectuer une opération afin de synchroniser les données!!!"),
+                  //fin journal de vente
+
+                  // pour le journal de ventes
+                  Expanded(
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: venteList.length,
+                      itemBuilder: (BuildContext context, index) {
+                        var item = venteList[index];
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            height: 150,
+                            width: MediaQuery.of(context).size.width * 0.46,
+                            decoration: const BoxDecoration(
+                                shape: BoxShape.rectangle,
+                                color: ConfigurationApp.successColor,
+                                borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(10),
+                                    topRight: Radius.circular(10),
+                                    bottomLeft: Radius.circular(10),
+                                    bottomRight: Radius.circular(10))),
+                            child: Center(
+                                child: CardDashboradComponent(
+                              titre: DateFormat("d/M/y")
+                                  .format(DateTime.parse(item['year'])),
+                              number: "${item['financial']}\$",
+                              signeIcon: "",
+                              icon: Icons.event_available,
+                              color: ConfigurationApp.successColor,
+                              textcolor: ConfigurationApp.whiteColor,
+                            )),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  //fin journal de vente
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Row(
@@ -286,6 +370,8 @@ class _JournalScreemState extends State<JournalScreem> {
                                   //appel statistique
                                   await getDashbord();
                                   await getListDataChart();
+                                  //pour les ventes
+                                  await getMesVentes();
                                 },
                                 child: const Text('En ligne'),
                               ),
@@ -356,9 +442,7 @@ class _JournalScreemState extends State<JournalScreem> {
                       ],
                     ),
                   ),
-                  const SizedBox(
-                    height: 10,
-                  ),
+
                   const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Row(

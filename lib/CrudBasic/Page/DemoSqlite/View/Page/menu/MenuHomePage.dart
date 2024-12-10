@@ -5,9 +5,13 @@ import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Authtentication/login.dar
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/menu/my_drawer_header.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/pages/Contribuable/Contribuable.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/pages/DashboardPage.dart';
+import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/pages/DashboardPeageRoute.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/pages/Journal/journalScreem.dart';
+import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/pages/JournalPeageRoute.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/pages/Personnel/personnelScreem.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/pages/Taxation/taxationScreem.dart';
+import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/pages/Taxe/PeageRoute.dart';
+import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/pages/Taxe/SousLibelleScreem.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/pages/Taxe/TaxeScreem.dart';
 
 // import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/notes.dart';
@@ -70,6 +74,39 @@ class _MenuHomePageState extends State<MenuHomePage> {
   void initState() {
     super.initState();
     getConnected();
+    fetMenu();
+  }
+
+  int _currentIndex = 0;
+  List<Widget> _screens = [];
+  // final List<Widget> _screens = [
+  //   const DashboardPeageRoute(),
+  //   const JournalPeageRoute(),
+  //   const PeageRoute(),
+  // ];
+
+  fetMenu() {
+    List<Widget> screensTab = [];
+    if (idRoleConnected != 9) {
+      screensTab = [
+        const DashboardPeageRoute(),
+        const JournalPeageRoute(),
+        const PeageRoute(),
+      ];
+      setState(() {
+        _screens = screensTab;
+      });
+    } else {
+      screensTab = [
+        const PersonnelScreem(),
+        const SousLibelleScreem(),
+        const TaxeScreem(),
+      ];
+
+      setState(() {
+        _screens = screensTab;
+      });
+    }
   }
 
   @override
@@ -77,9 +114,9 @@ class _MenuHomePageState extends State<MenuHomePage> {
     // ignore: prefer_typing_uninitialized_variables
     var container;
     if (currentPage == DrawerSections.dashboard) {
-      container = const DashboardPage();
+      container = const DashboardPeageRoute();
     } else if (currentPage == DrawerSections.jouranl) {
-      container = const JournalScreem();
+      container = const JournalPeageRoute();
     } else if (currentPage == DrawerSections.contribuable) {
       container = const ContribuablePage();
     } else if (currentPage == DrawerSections.taxation) {
@@ -88,6 +125,10 @@ class _MenuHomePageState extends State<MenuHomePage> {
       container = const TaxeScreem();
     } else if (currentPage == DrawerSections.personnel) {
       container = const PersonnelScreem();
+    } else if (currentPage == DrawerSections.immatriculation) {
+      container = const SousLibelleScreem();
+    } else if (currentPage == DrawerSections.peageRoute) {
+      container = const PeageRoute();
     }
 
     return Scaffold(
@@ -117,7 +158,48 @@ class _MenuHomePageState extends State<MenuHomePage> {
                 style:
                     const TextStyle(color: Colors.black, letterSpacing: 1.5)),
       ),
-      body: container,
+      // body: container,
+      body: idRoleConnected == 9 ? _screens[_currentIndex] : container,
+      bottomNavigationBar: BottomNavigationBar(
+        elevation: 20,
+        // backgroundColor: ConfigurationApp.successColor,
+        fixedColor: ConfigurationApp.successColor,
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: idRoleConnected == 9
+            ? const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.dashboard_outlined),
+                  label: 'Tableau de bord',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.credit_card),
+                  label: 'Synchronisation',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.wallet_sharp),
+                  label: 'Péage route',
+                ),
+              ]
+            : const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.list),
+                  label: 'Nomaclature',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.car_crash),
+                  label: 'Immatriculation',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.group_add),
+                  label: 'Utilisateur',
+                ),
+              ],
+      ),
       drawer: Drawer(
         shadowColor: ConfigurationApp.whiteColor,
         child: SingleChildScrollView(
@@ -144,17 +226,15 @@ class _MenuHomePageState extends State<MenuHomePage> {
           idRoleConnected == 9
               ? Column(
                   children: [
-                    menuItem(1, "Dashboard", Icons.dashboard_outlined,
+                    menuItem(1, "Tableau de bord", Icons.dashboard_outlined,
                         currentPage == DrawerSections.dashboard ? true : false),
-                    menuItem(2, "Journal", Icons.event,
+                    menuItem(2, "Synchronisation", Icons.credit_card,
                         currentPage == DrawerSections.jouranl ? true : false),
-                    menuItem(3, "Taxation", Icons.payments_sharp,
-                        currentPage == DrawerSections.taxation ? true : false),
                     menuItem(
-                        5,
-                        "Contribuable",
-                        Icons.person_pin_outlined,
-                        currentPage == DrawerSections.contribuable
+                        8,
+                        "Péage Route",
+                        Icons.wallet_sharp,
+                        currentPage == DrawerSections.peageRoute
                             ? true
                             : false),
                   ],
@@ -162,12 +242,11 @@ class _MenuHomePageState extends State<MenuHomePage> {
               // menu pour le super admin
               : Column(
                   children: [
-                    menuItem(1, "Dashboard", Icons.dashboard_outlined,
+                    menuItem(1, "Tableau de bord", Icons.dashboard_outlined,
                         currentPage == DrawerSections.dashboard ? true : false),
-                    menuItem(2, "Journal", Icons.event,
+                    menuItem(2, "Synchronisation", Icons.credit_card,
                         currentPage == DrawerSections.jouranl ? true : false),
-                    menuItem(3, "Taxation", Icons.payments_sharp,
-                        currentPage == DrawerSections.taxation ? true : false),
+
                     menuItem(
                         4,
                         "Nomaclature",
@@ -175,14 +254,23 @@ class _MenuHomePageState extends State<MenuHomePage> {
                         currentPage == DrawerSections.nomaclature
                             ? true
                             : false),
+                    // menuItem(
+                    //     5,
+                    //     "Contribuable",
+                    //     Icons.person_pin_outlined,
+                    //     currentPage == DrawerSections.contribuable ? true
+
+                    //         : false),
+                    // menuItem(3, "Taxation", Icons.payments_sharp,
+                    //     currentPage == DrawerSections.taxation ? true : false),
                     menuItem(
-                        5,
-                        "Contribuable",
-                        Icons.person_pin_outlined,
-                        currentPage == DrawerSections.contribuable
+                        7,
+                        "immatriculation",
+                        Icons.car_crash,
+                        currentPage == DrawerSections.immatriculation
                             ? true
                             : false),
-                    menuItem(6, "Personnel", Icons.group,
+                    menuItem(6, "Compte utilisateur", Icons.group_add,
                         currentPage == DrawerSections.personnel ? true : false),
                   ],
                 ),
@@ -200,8 +288,19 @@ class _MenuHomePageState extends State<MenuHomePage> {
           setState(() {
             if (id == 1) {
               currentPage = DrawerSections.dashboard;
+              setState(() {
+                _currentIndex = 0;
+              });
             } else if (id == 2) {
               currentPage = DrawerSections.jouranl;
+              setState(() {
+                _currentIndex = 1;
+              });
+            } else if (id == 8) {
+              currentPage = DrawerSections.peageRoute;
+              setState(() {
+                _currentIndex = 2;
+              });
             } else if (id == 3) {
               currentPage = DrawerSections.taxation;
             } else if (id == 4) {
@@ -210,6 +309,8 @@ class _MenuHomePageState extends State<MenuHomePage> {
               currentPage = DrawerSections.contribuable;
             } else if (id == 6) {
               currentPage = DrawerSections.personnel;
+            } else if (id == 7) {
+              currentPage = DrawerSections.immatriculation;
             }
           });
         },
@@ -250,4 +351,6 @@ enum DrawerSections {
   personnel,
   contribuable,
   paiement,
+  immatriculation,
+  peageRoute,
 }

@@ -1,9 +1,12 @@
 // import 'package:demoapp/CrudBasic/Page/InitialPage.dart';
 
+// ignore_for_file: avoid_single_cascade_in_expression_statements
+
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/SQLite/database_helper.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Authtentication/login.dart';
 // import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/mainScreem.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/menu/MenuHomePage.dart';
+
 // import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/Page/pages/contacts.dart';
 // import 'package:demoapp/CrudBasic/Page/DemoSqlite/View/notes.dart';
 // import 'package:demoapp/CrudBasic/Page/Offline/PageOnLine/FetchArticle.dart';
@@ -46,7 +49,7 @@ void configLoading() {
     ..maskColor = Colors.blue.withOpacity(0.5)
     ..userInteractions = true
     ..dismissOnTap = false;
-  //..customAnimation = CustomAnimation();
+  // ..customAnimation = CustomAnimation();
 }
 
 class MyApp extends StatelessWidget {
@@ -106,7 +109,7 @@ class _AuthControllerState extends State<AuthController> {
       theme: ThemeData(
         primarySwatch: Colors.blue, // Set the primary color theme
       ),
-      home: connected != '' ? const MenuHomePage() : const LoginScreen(),
+      home: connected == '' ? const LoginScreen() : const MenuHomePage(),
       // home: const ContactsPage(),
     );
   }

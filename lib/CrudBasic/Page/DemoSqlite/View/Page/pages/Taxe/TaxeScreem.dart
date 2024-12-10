@@ -291,7 +291,7 @@ class _TaxeScreemState extends State<TaxeScreem> {
                 child: Image.asset('assets/images/avatar.jpg',
                     fit: BoxFit.cover, height: 30, width: 30)),
             title: Text(note.nomCatTaxe ?? "",
-                style: Theme.of(context).textTheme.titleLarge,
+                style: Theme.of(context).textTheme.titleMedium,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis),
             subtitle: Column(

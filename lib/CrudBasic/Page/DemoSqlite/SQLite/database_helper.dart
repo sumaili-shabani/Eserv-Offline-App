@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'package:connectivity/connectivity.dart';
 import 'package:demoapp/CrudBasic/Api/my_api.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/Components/bar_chart_model.dart';
+import 'package:demoapp/CrudBasic/Page/DemoSqlite/jsonModel/PeageModel.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/jsonModel/Taxation_model.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/jsonModel/categoryTaxe_model.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/jsonModel/contribuable_model.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/jsonModel/detailTaxation_model.dart';
+import 'package:demoapp/CrudBasic/Page/DemoSqlite/jsonModel/immatriculationModel.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/jsonModel/note_model.dart';
 import 'package:demoapp/CrudBasic/Page/DemoSqlite/jsonModel/users.dart';
 import 'package:path/path.dart';
@@ -21,7 +23,10 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
-  final databaseName = "note_db.db";
+  //mes scripts
+
+  //fin scripts
+  final databaseName = "note_db12.db";
   String noteTable =
       "CREATE TABLE IF NOT EXISTS notes (noteId INTEGER PRIMARY KEY AUTOINCREMENT,noteEtat INTEGER NOT NULL, noteTitle TEXT NOT NULL, noteContent TEXT NOT NULL, noteCode  TEXT, createdAt TEXT DEFAULT CURRENT_TIMESTAMP)";
 
@@ -133,6 +138,45 @@ class DatabaseHelper {
 
    ''';
 
+  String immatriculationTable = '''
+
+  CREATE TABLE IF NOT EXISTS immatriculation (
+    idImmatriculation INTEGER PRIMARY KEY AUTOINCREMENT,
+    idLibelle INTEGER,
+    idSousLibelle INTEGER,
+    nomSousLibelle TEXT,
+    createdAt	Text DEFAULT CURRENT_TIMESTAMP
+  )
+
+   ''';
+
+  String peageTable = '''
+
+  CREATE TABLE IF NOT EXISTS peage (
+    idPeage INTEGER PRIMARY KEY AUTOINCREMENT,
+    idCatTaxe INTEGER,
+    idUser INTEGER,
+    statutPeage INTEGER  DEFAULT 0,
+    qte INTEGER  DEFAULT 0,
+    pu double  DEFAULT 0,
+    montantUsd double  DEFAULT 0,
+    nomAgent TEXT,
+    nomCb TEXT,
+    telCb TEXT,
+    marqueVehicule TEXT,
+    modelVehicule TEXT,
+    chassieVehicule TEXT,
+    numPlaque TEXT,
+    devise TEXT,
+    datePaiement TEXT,
+    codeNote TEXT,
+    comment TEXT,
+    nomCatTaxe TEXT DEFAULT 'peage',
+    createdAt	Text DEFAULT CURRENT_TIMESTAMP
+  )
+
+   ''';
+
   //We are done in this section
 
   Future<Database> initDB() async {
@@ -146,6 +190,8 @@ class DatabaseHelper {
       await db.execute(noteTable);
       await db.execute(contibuables);
       await db.execute(categoryTaxes);
+      await db.execute(immatriculationTable);
+      await db.execute(peageTable);
     });
   }
 
@@ -264,6 +310,29 @@ class DatabaseHelper {
     return sum;
   }
 
+  //pour la sommation
+  Future getQuerySommePeageRoute() async {
+    final Database db = await initDB();
+    int sum = 0;
+    double doublePeage = 0;
+    try {
+      List<Map<String, dynamic>> maps = await db.rawQuery(
+          "select SUM(montantUsd) as sum, datePaiement from peage  where datePaiement > DATETIME('now', '-30 day') ");
+
+      for (var item in maps) {
+        doublePeage = item["sum"];
+        sum = int.parse(doublePeage.toStringAsFixed(0));
+        // print('la soomme est: ${sum}');
+        // print(item);
+      }
+    } catch (e) {
+      print(e.toString());
+      CallApi.showErrorMsg(e.toString());
+    }
+
+    return sum;
+  }
+
   Future getQuerySumWhere(
       String table, String columnNumber, String column, value) async {
     final Database db = await initDB();
@@ -305,11 +374,45 @@ class DatabaseHelper {
     return sum;
   }
 
+  Future getQuerySumPeageRoute(value) async {
+    final Database db = await initDB();
+    int sum = 0;
+    double montantUsd = 0;
+    try {
+      List<Map<String, dynamic>> maps = await db.rawQuery(
+          "select SUM(montantUsd) as sum, datePaiement from peage  where statutPeage=? and datePaiement > DATETIME('now', '-30 day') ",
+          [value]);
+
+      for (var item in maps) {
+        montantUsd = item["sum"];
+        sum = int.parse(montantUsd.toStringAsFixed(0));
+        // print('sum: ${item["sum"]}');
+      }
+    } catch (e) {
+      print(e.toString());
+      CallApi.showErrorMsg(e.toString());
+    }
+
+    return sum;
+  }
+
   Future<List<BarChartModel>> getStatistiqueTaxation(String column) async {
     final Database db = await initDB();
     List<Map<String, Object?>> result = await db.rawQuery(
         "select SUM(detail_taxations.montant_reel) as financial, taxations.dateTaxation as year, contibuables.typeCb, contibuables.idtypeCb from detail_taxations inner join taxations  on detail_taxations.idTaxation=taxations.idTaxation  inner join contibuables  on contibuables.id=taxations.idCb  WHERE taxations.dateTaxation > DATETIME('now', '-30 day') group by $column");
     return result.map((e) => BarChartModel.fromMap(e)).toList();
+  }
+
+  Future getListStatistiqueTaxation(String column) async {
+    final Database db = await initDB();
+    List<Map<String, Object?>> result = await db.rawQuery(
+        "select SUM(detail_taxations.montant_reel) as financial, taxations.dateTaxation as year, contibuables.typeCb, contibuables.idtypeCb from detail_taxations inner join taxations  on detail_taxations.idTaxation=taxations.idTaxation  inner join contibuables  on contibuables.id=taxations.idCb  WHERE taxations.dateTaxation > DATETIME('now', '-30 day') group by $column ORDER BY detail_taxations.id desc");
+    List datas = [];
+
+    for (var item in result) {
+      datas.add(item);
+    }
+    return datas;
   }
 
   /*
@@ -967,6 +1070,22 @@ class DatabaseHelper {
     return userList;
   }
 
+  Future getCatTaxeSelectedByImmatriculation(int idSousLibelle) async {
+    final Database dbClient = await initDB();
+    List userList = [];
+    try {
+      List<Map<String, dynamic>> maps = await dbClient.rawQuery(
+          'select * from category_taxes where idSousLibelle=?',
+          [idSousLibelle]);
+      for (var item in maps) {
+        userList.add(item);
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+    return userList;
+  }
+
   //Get users
   Future<List<CategoryTaxeModel>> fetchCatTaxe() async {
     final Database db = await initDB();
@@ -1483,4 +1602,305 @@ class DatabaseHelper {
   * Fin Taxation
   *=========================
   */
+
+  /*
+  *
+  *=========================
+  * Immatriculation
+  *=========================
+  */
+  //CRUD Methods immatriculation
+  //Search Method
+  Future<List<ImmatriculationModel>> searchImmatriculations(
+      String keyword) async {
+    final Database db = await initDB();
+    List<Map<String, Object?>> searchResult = await db.rawQuery(
+        "select * from immatriculation where nomSousLibelle LIKE ?",
+        ["%$keyword%"]);
+    return searchResult.map((e) => ImmatriculationModel.fromMap(e)).toList();
+  }
+
+  //Create Immatriculation
+  Future<int> createImmatriculation(ImmatriculationModel note) async {
+    final Database db = await initDB();
+    return db.insert('immatriculation', note.toMap());
+  }
+
+  //Get Immatriculation
+  Future<List<ImmatriculationModel>> getImmatriculations() async {
+    final Database db = await initDB();
+    List<Map<String, Object?>> result = await db
+        .rawQuery('select * from immatriculation order by idLibelle desc');
+    return result.map((e) => ImmatriculationModel.fromMap(e)).toList();
+  }
+
+  //Delete Immatriculation
+  Future<int> deleteImmatriculation(int id) async {
+    final Database db = await initDB();
+    return db.delete('immatriculation',
+        where: 'idImmatriculation = ?', whereArgs: [id]);
+  }
+
+  //Update Immatriculation
+  Future<int> updateImmatriculation(
+      idSousLibelle, nomSousLibelle, idImmatriculation) async {
+    final Database db = await initDB();
+    return db.rawUpdate(
+        'update immatriculation set idSousLibelle = ?, nomSousLibelle = ? where idImmatriculation = ?',
+        [idSousLibelle, nomSousLibelle, idImmatriculation]);
+  }
+
+  //show categorie list
+  Future fetchDataListImmatriculation() async {
+    final Database dbClient = await initDB();
+    List userList = [];
+    try {
+      List<Map<String, dynamic>> maps = await dbClient.rawQuery(
+          'select * from immatriculation order by idSousLibelle desc limit 10000');
+      for (var item in maps) {
+        userList.add(item);
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+    return userList;
+  }
+
+  Future getImmatriculationExist(int id) async {
+    final Database db = await initDB();
+    var result = await db
+        .rawQuery("select * from immatriculation where idSousLibelle= $id ");
+    if (result.isNotEmpty) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  //get Taxe on line app
+  Future getImmatriculationOnLineApp() async {
+    final Database dbClient = await initDB();
+
+    //liste des utilisateur on line
+    List dataOnLineAppList = [];
+
+    try {
+      //requete
+      final response = await http
+          .get(Uri.parse('${CallApi.ApiUrl}getSousLibelleTugGroupe/5'));
+
+      if (response.statusCode == 200) {
+        final List data = json.decode(response.body)['data'];
+
+        dataOnLineAppList = data;
+
+        await dbClient.delete('immatriculation');
+
+        //boucle
+        for (var i = 0; i < dataOnLineAppList.length; i++) {
+          Map<String, dynamic> svData = {
+            "idSousLibelle": int.parse(dataOnLineAppList[i]['id'].toString()),
+            "idLibelle":
+                int.parse(dataOnLineAppList[i]['idLibelle'].toString()),
+            "nomSousLibelle": dataOnLineAppList[i]['nomSousLibelle'].toString(),
+            "createdAt": dataOnLineAppList[i]['created_at'].toString(),
+          };
+
+          // print(svData);
+
+          await dbClient.insert('immatriculation', svData);
+        }
+
+        // print(data);
+      } else {
+        print('Error retrieving data: ${response.body}');
+      }
+    } catch (e) {
+      CallApi.showErrorMsg(e.toString());
+      print(e.toString());
+    }
+  }
+
+  /*
+  *
+  *=======================
+  * Table immatriculation
+  *=======================
+  */
+
+  /*
+  *
+  *=========================
+  * PeageRoute
+  *=========================
+  */
+  //CRUD Methods peage
+  //Search Method
+  Future<List<PeageModel>> searchPeages(String keyword) async {
+    final Database db = await initDB();
+    List<Map<String, Object?>> searchResult = await db.rawQuery(
+        "select * from peage where nomCb LIKE ? or nomCatTaxe like ? or codeNote like ?",
+        ["%$keyword%", "%$keyword%", "%$keyword%"]);
+    return searchResult.map((e) => PeageModel.fromMap(e)).toList();
+  }
+
+  //Create peage
+  Future<int> createPeage(PeageModel note) async {
+    final Database db = await initDB();
+    return db.insert('peage', note.toMap());
+  }
+
+  //insert json Peage
+  Future<int> insertPeageData(Map<String, dynamic> svData) async {
+    final Database db = await initDB();
+    return await db.insert('peage', svData);
+  }
+
+  //Get peage
+  Future<List<PeageModel>> getPeages() async {
+    final Database db = await initDB();
+    List<Map<String, Object?>> result =
+        await db.rawQuery('select * from peage order by idPeage desc');
+    return result.map((e) => PeageModel.fromMap(e)).toList();
+  }
+
+  //Delete peage
+  Future<int> deletePeage(int id) async {
+    final Database db = await initDB();
+    return db.delete('peage', where: 'idPeage = ?', whereArgs: [id]);
+  }
+
+  //Update idPeage
+  Future<int> updateStatutPeage(int idPeage) async {
+    final Database db = await initDB();
+    return db.rawUpdate(
+        'update peage set statutPeage = 1 where idPeage = ?', [idPeage]);
+  }
+
+  //Get PeageModel
+  Future<List<PeageModel>> fetchDetailPeageByCodeNote(codeNote) async {
+    final Database db = await initDB();
+    List<Map<String, Object?>> result = await db
+        .rawQuery('select * from peage where codeNote=? limit 1', [codeNote]);
+
+    return result.map((e) => PeageModel.fromMap(e)).toList();
+  }
+
+  // statistique peage route
+  Future<List<BarChartModel>> getStatistiquePeageRoute(String column) async {
+    final Database db = await initDB();
+    List<Map<String, Object?>> result = await db.rawQuery(
+        "select SUM(montantUsd) as financial,datePaiement as typeCb, datePaiement as year from peage WHERE datePaiement > DATETIME('now', '-30 day') group by datePaiement");
+    return result.map((e) => BarChartModel.fromMap(e)).toList();
+  }
+
+  Future getListStatistiquePeageRoute(String column) async {
+    final Database db = await initDB();
+    List<Map<String, Object?>> result = await db.rawQuery(
+        "select SUM(montantUsd) as financial,datePaiement as typeCb, datePaiement as year from peage WHERE datePaiement > DATETIME('now', '-30 day') group by datePaiement ORDER BY idPeage desc");
+    List datas = [];
+
+    for (var item in result) {
+      datas.add(item);
+    }
+    return datas;
+  }
+
+  //show Peage list
+  Future fetchDataListPeage() async {
+    final Database dbClient = await initDB();
+    List userList = [];
+    try {
+      List<Map<String, dynamic>> maps =
+          await dbClient.rawQuery('select * from peage order by idPeage asc');
+      for (var item in maps) {
+        userList.add(item);
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+    return userList;
+  }
+
+  //show Peage list
+  Future fetchDataListPeageOffLine() async {
+    final Database dbClient = await initDB();
+    List userList = [];
+    try {
+      List<Map<String, dynamic>> maps = await dbClient.rawQuery(
+          'select * from peage where statutPeage=0 order by idPeage asc');
+      for (var item in maps) {
+        userList.add(item);
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+    return userList;
+  }
+
+  /*
+  *
+  *==================================
+  * synchronisation de Peage route
+  *==================================
+  *
+  */
+
+  //pour la synchronisation
+  Future saveToMysqlPeageRoute(List dataList) async {
+    for (var i = 0; i < dataList.length; i++) {
+      Map<String, dynamic> data = {
+        "id": "",
+        "idCatTaxe": dataList[i]['idCatTaxe'].toString(),
+        "idUser": dataList[i]['idUser'].toString(),
+        "qte": dataList[i]['qte'].toString(),
+        "pu": dataList[i]['pu'].toString(),
+        "montantUsd": dataList[i]['montantUsd'].toString(),
+        "nomAgent": dataList[i]['nomAgent'].toString(),
+        "nomCb": dataList[i]['nomCb'].toString(),
+        "telCb": dataList[i]['telCb'].toString(),
+        "marqueVehicule": dataList[i]['marqueVehicule'].toString(),
+        "modelVehicule": dataList[i]['modelVehicule'].toString(),
+        "chassieVehicule": dataList[i]['chassieVehicule'].toString(),
+        "numPlaque": dataList[i]['numPlaque'].toString(),
+        "devise": dataList[i]['devise'].toString(),
+        "datePaiement": dataList[i]['datePaiement'].toString(),
+        "codeNote": dataList[i]['codeNote'].toString(),
+        "comment": dataList[i]['comment'].toString(),
+        "nomCatTaxe": dataList[i]['nomCatTaxe'].toString(),
+      };
+      // print(data);
+      insertQueryBDonLinePeageRoute(data, dataList[i]['idPeage']);
+    }
+  }
+
+  Future insertQueryBDonLinePeageRoute(Map svData, int idPeage) async {
+    try {
+      final String dataState;
+      final res = await http.post(
+          Uri.parse("${CallApi.ApiUrl.toString()}store_mobile_paiege_route"),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(svData));
+
+      if (res.statusCode == 200) {
+        dataState = jsonDecode(res.body)['dataState'].toString();
+        var message = jsonDecode(res.body)['data'].toString();
+        if (dataState == "1") {
+          //changement d'etat de cb envoyé au serveur
+          updateStatutPeage(int.parse(idPeage.toString()));
+
+          CallApi.showMsg(message);
+        }
+      } else {
+        dataState = "0";
+
+        print(res.statusCode.toString());
+      }
+    } catch (e) {
+      print(e.toString());
+      CallApi.showErrorMsg(e.toString());
+    }
+  }
 }

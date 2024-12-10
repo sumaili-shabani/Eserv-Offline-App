@@ -9,9 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class CallApi {
-  final String _url = 'http://192.168.82.127:8000/api/';
-  final String _imgUrl = 'http://192.168.82.127:8000/uploads/';
-  static String ApiUrl = "http://192.168.82.127:8000/api/";
+  final String _url = 'http://192.168.51.127:8000/api/';
+  final String _imgUrl = 'http://192.168.51.127:8000/uploads/';
+  static String ApiUrl = "http://192.168.51.127:8000/api/";
   getImage() {
     return _imgUrl;
   }
